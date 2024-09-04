@@ -2,12 +2,16 @@
 import { computed, onMounted, ref } from "vue";
 import { getBookingDetails } from "../apis/booking.api.ts";
 import dayjs from "dayjs";
+import { useRouter } from "vue-router";
 
 const bookingDetails = ref({});
 
-onMounted(() => {
-  const data = getBookingDetails("", "");
-  bookingDetails.value = data;
+const router = useRouter();
+const { bookingId, stationId } = router.currentRoute.value.params;
+const { stationName } = router.currentRoute.value.query;
+
+onMounted(async () => {
+  bookingDetails.value = await getBookingDetails(stationId, bookingId);
 });
 
 const bookingDuration = computed(() => {
@@ -18,7 +22,6 @@ const bookingDuration = computed(() => {
   const endDate = dayjs(bookingDetails.value.endDate);
   return `${endDate.diff(startDate, "day")} days`;
 });
-
 </script>
 <template>
   <div class="bg-white overflow-hidden shadow rounded-lg border">
@@ -59,7 +62,7 @@ const bookingDuration = computed(() => {
             Pickup-Return Station Name
           </dt>
           <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-            {{ bookingDetails.pickupReturnStationId }}
+            {{ stationName }}
           </dd>
         </div>
       </dl>

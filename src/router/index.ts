@@ -11,7 +11,7 @@ const routes = [
   },
   {
     name: "detail",
-    path: "/detail/stations/:stationId?/bookings/:bookingId?",
+    path: "/detail/stations/:stationId?/bookings/:bookingId",
     component: BookingDetail,
   },
   {

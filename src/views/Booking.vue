@@ -7,19 +7,22 @@ import {
   ChevronDoubleRightIcon,
   FlagIcon,
 } from "@heroicons/vue/24/solid";
+import Autocomplete from "../components/Autocomplete.vue";
 
 const TOTAL_DAYS_IN_WEEK = 7;
 
-const currentWeek = dayjs(dayjs()).startOf("week").add(1, "day");
+const currentWeek = dayjs(dayjs("2021-10-15")).startOf("week").add(1, "day");
 const beginningOfWeek = ref(currentWeek);
 
-const bookingsData = getBookingData();
-
 const dates = computed(() => {
+  if (!selectedStation.value) {
+    return [];
+  }
+
   return Array.from({ length: TOTAL_DAYS_IN_WEEK }, (_, i) => {
     const selectedWeekFirstDate = beginningOfWeek.value;
     const newDate = dayjs(selectedWeekFirstDate).add(i, "day");
-    const targetedStationBookings = bookingsData[0].bookings;
+    const targetedStationBookings = selectedStation.value.bookings;
 
     const bookings = targetedStationBookings.reduce((acc, current) => {
       const isBookingStartDate = newDate.isSame(
@@ -65,16 +68,38 @@ function handleCurrentWeekSelection() {
   beginningOfWeek.value = currentWeek;
 }
 
-const selectedStation = ref("1");
+const selectedStation = ref();
+
+const searchQuery = ref("");
+const results = ref([]);
+
+const handleInput = async (query) => {
+  if (query.length > 2) {
+    // Call your API here and update the results
+    // const response = await fetch(`https://api.example.com/search?q=${query}`);
+    // results.value = await response.json();
+    results.value = await getBookingData(query);
+
+    console.log("callled", query, results.value);
+  } else {
+    results.value = [];
+  }
+};
+
+const handleModelUpdate = (selection) => {
+  selectedStation.value = selection;
+};
 </script>
 
 <template>
   <div class="bg-amber-100 p-4 mx-auto w-full">
     <div>
-      <select v-model="selectedStation" class="p-2 border rounded">
-        <option value="1">Berlin</option>
-        <option value="2">Other city</option>
-      </select>
+      <Autocomplete
+        v-model="searchQuery"
+        :suggestions="results"
+        @input="handleInput"
+        @update:modelValue="handleModelUpdate"
+      />
     </div>
     <div class="text-red-900 bg-amber-400">{{ monthInView }}</div>
     <div class="flex justify-end gap-1 m-2">
@@ -121,7 +146,13 @@ const selectedStation = ref("1");
             custom
             :to="{
               name: 'detail',
-              params: { bookingId: booking.id, stationId: selectedStation },
+              params: {
+                bookingId: booking.id,
+                stationId: selectedStation.id,
+              },
+              query: {
+                stationName: selectedStation.name,
+              },
             }"
             v-slot="{ navigate }"
           >

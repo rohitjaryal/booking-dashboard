@@ -1,5 +1,21 @@
-export const getBookingData = () => {
-  return bookingData;
+import { fetchRequest } from "../includes/axios.ts";
+
+export const getBookingData = async (query: string) => {
+  const response = await fetchRequest.get(`/stations?name=${query}`);
+  return response.data;
+  // return bookingData;
+};
+
+export const getBookingDetails = async (
+  stationId: string,
+  bookingId: string,
+) => {
+  const response = await fetchRequest.get(
+    `stations/${stationId}/bookings/${bookingId}`,
+  );
+  return response.data;
+
+  // return bookingDetailData;
 };
 
 const bookingData = [
@@ -734,3 +750,11 @@ const bookingData = [
   },
   { name: "station-name{{i}}", id: "7", bookings: [] },
 ];
+
+const bookingDetailData = {
+  id: "1",
+  pickupReturnStationId: "1",
+  customerName: "Keara Adams",
+  startDate: "2021-03-13T22:04:19.032Z",
+  endDate: "2021-07-17T08:51:27.402Z",
+};
