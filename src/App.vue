@@ -2,6 +2,7 @@
 
 import {ref} from "vue";
 import Autocomplete from "./components/Autocomplete.vue";
+import Booking from "./views/Booking.vue";
 
 const searchQuery = ref('');
 const results = ref([]);
@@ -35,6 +36,8 @@ const handleInput = async (query) => {
         :suggestions="results"
         @input="handleInput"
     />
+
   </div>
+  <Booking />
 
 </template>
