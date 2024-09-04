@@ -35,7 +35,7 @@ const selectSuggestion = (suggestion: Suggestion) => {
       @input="handleInput"
       type="text"
       class="w-full p-2 border border-gray-300 rounded"
-      placeholder="Search..."
+      placeholder="Search by station name"
     />
     <ul
       v-if="showSuggestions && suggestions.length"

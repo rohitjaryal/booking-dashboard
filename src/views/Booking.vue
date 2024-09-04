@@ -8,21 +8,26 @@ import {
   FlagIcon,
 } from "@heroicons/vue/24/solid";
 import Autocomplete from "../components/Autocomplete.vue";
+import useBookingStore from "../stores/booking.store.ts";
 
 const TOTAL_DAYS_IN_WEEK = 7;
 
+const bookingStore = useBookingStore();
+
 const currentWeek = dayjs(dayjs("2021-10-15")).startOf("week").add(1, "day");
-const beginningOfWeek = ref(currentWeek);
+
+const beginningOfWeek = ref(bookingStore.startDateOfWeek || currentWeek);
+bookingStore.startDateOfWeek = beginningOfWeek;
 
 const dates = computed(() => {
-  if (!selectedStation.value) {
+  if (!bookingStore.selectedStationData) {
     return [];
   }
 
   return Array.from({ length: TOTAL_DAYS_IN_WEEK }, (_, i) => {
     const selectedWeekFirstDate = beginningOfWeek.value;
     const newDate = dayjs(selectedWeekFirstDate).add(i, "day");
-    const targetedStationBookings = selectedStation.value.bookings;
+    const targetedStationBookings = bookingStore.selectedStationData.bookings;
 
     const bookings = targetedStationBookings.reduce((acc, current) => {
       const isBookingStartDate = newDate.isSame(
@@ -68,9 +73,9 @@ function handleCurrentWeekSelection() {
   beginningOfWeek.value = currentWeek;
 }
 
-const selectedStation = ref();
+// const selectedStation = ref();
 
-const searchQuery = ref("");
+const searchQuery = ref(bookingStore.selectedStationData?.name || "");
 const results = ref([]);
 
 const handleInput = async (query) => {
@@ -79,15 +84,15 @@ const handleInput = async (query) => {
     // const response = await fetch(`https://api.example.com/search?q=${query}`);
     // results.value = await response.json();
     results.value = await getBookingData(query);
-
-    console.log("callled", query, results.value);
   } else {
     results.value = [];
   }
 };
 
 const handleModelUpdate = (selection) => {
-  selectedStation.value = selection;
+  // selectedStation.value = selection;
+  bookingStore.selectedStationData = selection;
+  console.log("dd:>", bookingStore.selectedStationData);
 };
 </script>
 
@@ -104,17 +109,17 @@ const handleModelUpdate = (selection) => {
     <div class="text-red-900 bg-amber-400">{{ monthInView }}</div>
     <div class="flex justify-end gap-1 m-2">
       <ChevronDoubleLeftIcon
-        class="size-10 text-white hover:bg-amber-400 bg-gray-500 p-1 rounded"
+        class="size-10 text-white cursor-pointer hover:bg-amber-400 bg-gray-500 p-1 rounded"
         @click="handlePreviousWeek"
       />
       <button
         @click="handleCurrentWeekSelection"
-        class="hover:bg-amber-400 cursor-pointer text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
+        class="hover:bg-amber-400 cursor-pointer hover:bg-amber-400 text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
       >
         Today
       </button>
       <ChevronDoubleRightIcon
-        class="size-10 hover:bg-amber-400 text-white bg-gray-500 rounded p-1"
+        class="size-10 hover:bg-amber-400 cursor-pointer text-white bg-gray-500 rounded p-1"
         @click="handleNextWeek"
       />
     </div>
@@ -148,10 +153,10 @@ const handleModelUpdate = (selection) => {
               name: 'detail',
               params: {
                 bookingId: booking.id,
-                stationId: selectedStation.id,
+                stationId: bookingStore.selectedStationData.id,
               },
               query: {
-                stationName: selectedStation.name,
+                stationName: bookingStore.selectedStationData.name,
               },
             }"
             v-slot="{ navigate }"
