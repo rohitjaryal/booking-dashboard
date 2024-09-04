@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.1.5",
     "dayjs": "^1.11.13",
+    "prettier": "^3.3.3",
     "vue": "^3.4.37"
   },
   "devDependencies": {
