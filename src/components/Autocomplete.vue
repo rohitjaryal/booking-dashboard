@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import debounce from "lodash/debounce";
 
 interface Suggestion {
   id: string;
@@ -9,17 +10,27 @@ interface Suggestion {
 const props = defineProps<{
   modelValue: Object;
   suggestions: Suggestion[];
+  debounceInterval?: number;
 }>();
 
 const emit = defineEmits(["update:modelValue", "input"]);
 
 const query = ref(props.modelValue || "");
 const showSuggestions = ref(false);
+const DEFAULT_DEBOUNCE_INTERVAL = 400;
 
-const handleInput = () => {
-  showSuggestions.value = true;
-  emit("input", query.value);
-};
+const intervalOfDebounce = props.debounceInterval ?? DEFAULT_DEBOUNCE_INTERVAL;
+
+const handleInput = debounce(
+  () => {
+    showSuggestions.value = true;
+    emit("input", query.value);
+  },
+  intervalOfDebounce,
+  {
+    leading: false,
+  },
+);
 
 const selectSuggestion = (suggestion: Suggestion) => {
   query.value = suggestion.name;

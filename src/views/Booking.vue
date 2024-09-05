@@ -90,16 +90,14 @@ const handleInput = async (query) => {
 };
 
 const handleModelUpdate = (selection) => {
-  // selectedStation.value = selection;
   bookingStore.selectedStationData = selection;
-  console.log("dd:>", bookingStore.selectedStationData);
 };
 </script>
 
 <template>
   <div class="bg-amber-100 p-4 mx-auto w-full">
     <div>
-      <Autocomplete
+      <autocomplete
         v-model="searchQuery"
         :suggestions="results"
         @input="handleInput"
@@ -114,7 +112,7 @@ const handleModelUpdate = (selection) => {
       />
       <button
         @click="handleCurrentWeekSelection"
-        class="hover:bg-amber-400 cursor-pointer hover:bg-amber-400 text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
+        class="cursor-pointer hover:bg-amber-400 text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
       >
         Today
       </button>
