@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { computed, ref } from "vue";
 import { getBookingData } from "../apis/booking.api.ts";
 import {
@@ -9,14 +9,27 @@ import {
 } from "@heroicons/vue/24/solid";
 import Autocomplete from "../components/Autocomplete.vue";
 import useBookingStore from "../stores/booking.store.ts";
+import { useRouter } from "vue-router";
 
 const TOTAL_DAYS_IN_WEEK = 7;
 
 const bookingStore = useBookingStore();
 
-const currentWeek = dayjs(dayjs("2021-10-15")).startOf("week").add(1, "day");
+const router = useRouter();
+const defaultDate =
+  router.currentRoute.value.query?.defaultDate ?? "2021-09-20";
 
-const beginningOfWeek = ref(bookingStore.startDateOfWeek || currentWeek);
+const getBeginningOfWeek = (date: Dayjs) => {
+  return dayjs(date).startOf("week").add(1, "day");
+};
+
+const defaultBeginningOfWeek = getBeginningOfWeek(
+  dayjs(defaultDate, "YYYY-MM-DD"),
+);
+
+const beginningOfWeek = ref(
+  bookingStore.startDateOfWeek || defaultBeginningOfWeek,
+);
 bookingStore.startDateOfWeek = beginningOfWeek;
 
 const dates = computed(() => {
@@ -70,19 +83,14 @@ function handleNextWeek() {
 }
 
 function handleCurrentWeekSelection() {
-  beginningOfWeek.value = currentWeek;
+  beginningOfWeek.value = getBeginningOfWeek(dayjs());
 }
-
-// const selectedStation = ref();
 
 const searchQuery = ref(bookingStore.selectedStationData?.name || "");
 const results = ref([]);
 
 const handleInput = async (query) => {
   if (query.length > 2) {
-    // Call your API here and update the results
-    // const response = await fetch(`https://api.example.com/search?q=${query}`);
-    // results.value = await response.json();
     results.value = await getBookingData(query);
   } else {
     results.value = [];
@@ -91,6 +99,48 @@ const handleInput = async (query) => {
 
 const handleModelUpdate = (selection) => {
   bookingStore.selectedStationData = selection;
+};
+
+const draggedItem = ref<string | null>(null);
+
+const handleDragOver = (props) => {
+  // console.log("dragged:>", props);
+};
+
+const handleDrop = (props) => {
+  /***
+   checks to add
+   - change end date or start date logic ?  -> check isStartDateFlag   Done.
+   -
+       **/
+
+  // debugger;
+  const isPickupDate = draggedItem.value.isBookingStartDate;
+  const stationData = { ...bookingStore.selectedStationData };
+  const targetIndex = stationData.bookings.findIndex((info) =>
+    isPickupDate
+      ? draggedItem.value.startDate === info.startDate
+      : draggedItem.value.endDate === info.endDate &&
+        info.customerName === draggedItem.value.customerName,
+  );
+
+  const targetedBooking = stationData.bookings[targetIndex];
+
+  if (isPickupDate) {
+    targetedBooking.startDate = props.date.toISOString();
+  } else {
+    targetedBooking.endDate = props.date.toISOString();
+  }
+
+  // replace the end date with the new end date of that cell
+  bookingStore.selectedStationData = stationData;
+  console.log(
+    `The ${isPickupDate ? "Pickup" : "Return"} date has been updated for customer ${targetedBooking.customerName} !!!`,
+  );
+};
+
+const handleDragStart = (info, date) => {
+  draggedItem.value = info;
 };
 </script>
 
@@ -105,7 +155,13 @@ const handleModelUpdate = (selection) => {
       />
     </div>
     <div class="text-red-900 bg-amber-400">{{ monthInView }}</div>
-    <div class="flex justify-end gap-1 m-2">
+    <div v-if="!bookingStore.selectedStationData">
+      Please select the station to view bookings
+    </div>
+    <div
+      class="flex justify-end gap-1 m-2"
+      v-if="bookingStore.selectedStationData"
+    >
       <ChevronDoubleLeftIcon
         class="size-10 text-white cursor-pointer hover:bg-amber-400 bg-gray-500 p-1 rounded"
         @click="handlePreviousWeek"
@@ -143,6 +199,9 @@ const handleModelUpdate = (selection) => {
         v-for="date in dates"
         :key="date.dateFormatted"
         class="border border-gray-500"
+        :class="['bg-green-400']"
+        @dragover.prevent="handleDragOver"
+        @drop="handleDrop(date)"
       >
         <div :key="booking.id" v-for="booking in date.bookings">
           <router-link
@@ -162,6 +221,8 @@ const handleModelUpdate = (selection) => {
             <div
               class="flex justify-between items-center border border-red-500 m-2 p-2 rounded cursor-pointer hover:bg-amber-400"
               @click="navigate"
+              draggable="true"
+              @dragstart="handleDragStart(booking, date)"
             >
               <FlagIcon
                 class="size-4"
