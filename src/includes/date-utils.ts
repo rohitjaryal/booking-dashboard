@@ -6,13 +6,20 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
 export default {
+  getBeginningOfWeek(date: Dayjs): Dayjs {
+    return dayjs(date).startOf("week").add(1, "day");
+  },
   convertTimeStampToTimeAgo(time: string) {
     return time ? dayjs(dayjs(time)).fromNow() : "";
   },
   parseDateTimeInReadableFormat(date: Dayjs) {
-    return dayjs(date).format("MMMM D, YYYY h:mm A");
+    return date.format("MMMM D, YYYY h:mm A");
   },
-  getDifferenceInDates(startDateTime, endDateTime, unit = "day"): number {
+  getDifferenceInDates(
+    startDateTime: string,
+    endDateTime: string,
+    unit: dayjs.UnitType = "day",
+  ): number {
     const startDate = dayjs(startDateTime);
     const endDate = dayjs(endDateTime);
     return endDate.diff(startDate, unit);

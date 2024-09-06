@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import dayjs, { Dayjs } from "dayjs";
-import { computed, ref } from "vue";
-import { getBookingData } from "../apis/booking.api.ts";
+import { computed, ref, watch } from "vue";
+import { getStationData } from "../apis/booking.api.ts";
 import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
@@ -10,61 +10,72 @@ import {
 import Autocomplete from "../components/Autocomplete.vue";
 import useBookingStore from "../stores/booking.store.ts";
 import { useRouter } from "vue-router";
+import {
+  Station,
+  WeekViewBooking,
+  WeekViewData,
+} from "../types/booking.types.ts";
+import dateUtils from "../includes/date-utils.ts";
 
 const TOTAL_DAYS_IN_WEEK = 7;
+const DATE_FORMAT_SIMPLE = "YYYY-MM-DD";
 
 const bookingStore = useBookingStore();
 
 const router = useRouter();
 const defaultDate =
-  router.currentRoute.value.query?.defaultDate ?? "2021-09-20";
+  router.currentRoute.value.query?.defaultDate ??
+  dayjs().format(DATE_FORMAT_SIMPLE);
 
-const getBeginningOfWeek = (date: Dayjs) => {
-  return dayjs(date).startOf("week").add(1, "day");
-};
-
-const defaultBeginningOfWeek = getBeginningOfWeek(
-  dayjs(defaultDate, "YYYY-MM-DD"),
+const defaultBeginningOfWeek = dateUtils.getBeginningOfWeek(
+  dayjs(defaultDate.toString(), DATE_FORMAT_SIMPLE),
 );
 
-const beginningOfWeek = ref(
+const beginningOfWeek = ref<Dayjs>(
   bookingStore.startDateOfWeek || defaultBeginningOfWeek,
 );
-bookingStore.startDateOfWeek = beginningOfWeek;
 
-const dates = computed(() => {
+watch(beginningOfWeek, () => {
+  bookingStore.startDateOfWeek = beginningOfWeek.value;
+});
+
+const dates = computed<WeekViewData[]>(() => {
   if (!bookingStore.selectedStationData) {
     return [];
   }
 
   return Array.from({ length: TOTAL_DAYS_IN_WEEK }, (_, i) => {
     const selectedWeekFirstDate = beginningOfWeek.value;
-    const newDate = dayjs(selectedWeekFirstDate).add(i, "day");
-    const targetedStationBookings = bookingStore.selectedStationData.bookings;
+    const newDate = selectedWeekFirstDate.add(i, "day");
+    const targetedStationBookings =
+      bookingStore.selectedStationData?.bookings ?? [];
 
-    const bookings = targetedStationBookings.reduce((acc, current) => {
-      const isBookingStartDate = newDate.isSame(
-        dayjs(current.startDate),
-        "day",
-      );
-      const isBookingEndDate = newDate.isSame(dayjs(current.endDate), "day");
-      if (isBookingStartDate || isBookingEndDate) {
-        return [
-          ...acc,
-          {
-            ...current,
-            isBookingStartDate,
-          },
-        ];
-      }
-      return acc;
-    }, []);
+    const bookings = targetedStationBookings.reduce<WeekViewBooking[]>(
+      (acc, current) => {
+        const isBookingStartDate = newDate.isSame(
+          dayjs(current.startDate),
+          "day",
+        );
+        const isBookingEndDate = newDate.isSame(dayjs(current.endDate), "day");
+        if (isBookingStartDate || isBookingEndDate) {
+          return [
+            ...acc,
+            {
+              ...current,
+              isBookingStartDate,
+            },
+          ];
+        }
+        return acc;
+      },
+      [],
+    );
 
     return {
       date: newDate,
       dayNameShort: newDate.format("ddd"),
       dayNumber: newDate.format("DD"),
-      dateFormatted: newDate.format("YYYY-MM-DD"),
+      dateFormatted: newDate.format(DATE_FORMAT_SIMPLE),
       bookings,
     };
   });
@@ -83,69 +94,91 @@ function handleNextWeek() {
 }
 
 function handleCurrentWeekSelection() {
-  beginningOfWeek.value = getBeginningOfWeek(dayjs());
+  beginningOfWeek.value = dateUtils.getBeginningOfWeek(dayjs());
 }
 
 const searchQuery = ref(bookingStore.selectedStationData?.name || "");
-const results = ref([]);
+const results = ref<Station[]>([]);
 
-const handleInput = async (query) => {
+const handleInput = async (query: string) => {
   if (query.length > 2) {
-    results.value = await getBookingData(query);
+    results.value = await getStationData({ query });
   } else {
     results.value = [];
   }
 };
 
-const handleModelUpdate = (selection) => {
+const handleModelUpdate = (selection: Station) => {
   bookingStore.selectedStationData = selection;
 };
 
-const draggedItem = ref<string | null>(null);
+const draggedItem = ref<WeekViewBooking>();
 
-const handleDragOver = (props) => {
-  // console.log("dragged:>", props);
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault();
 };
 
-const handleDrop = (props) => {
-  /***
-   checks to add
-   - change end date or start date logic ?  -> check isStartDateFlag   Done.
-   -
-       **/
+const handleDrop = (date: string) => {
+  if (!date || !draggedItem.value || !bookingStore.selectedStationData) {
+    return;
+  }
 
   // debugger;
   const isPickupDate = draggedItem.value.isBookingStartDate;
   const stationData = { ...bookingStore.selectedStationData };
   const targetIndex = stationData.bookings.findIndex((info) =>
     isPickupDate
-      ? draggedItem.value.startDate === info.startDate
-      : draggedItem.value.endDate === info.endDate &&
+      ? draggedItem.value?.startDate === info.startDate
+      : draggedItem.value?.endDate === info.endDate &&
         info.customerName === draggedItem.value.customerName,
   );
 
   const targetedBooking = stationData.bookings[targetIndex];
 
   if (isPickupDate) {
-    targetedBooking.startDate = props.date.toISOString();
+    targetedBooking.startDate = date;
   } else {
-    targetedBooking.endDate = props.date.toISOString();
+    targetedBooking.endDate = date;
   }
 
-  // replace the end date with the new end date of that cell
   bookingStore.selectedStationData = stationData;
   console.log(
     `The ${isPickupDate ? "Pickup" : "Return"} date has been updated for customer ${targetedBooking.customerName} !!!`,
   );
 };
 
-const handleDragStart = (info, date) => {
+const handleDragStart = (info: WeekViewBooking) => {
   draggedItem.value = info;
 };
+
+const currentTouchTarget = ref<EventTarget>();
+
+function handleTouchStart(event: TouchEvent, info: WeekViewBooking) {
+  draggedItem.value = info;
+  currentTouchTarget.value = event.targetTouches[0].target;
+}
+
+function handleTouchMove(event: TouchEvent) {
+  event.preventDefault();
+}
+
+function handleTouchEnd(event: TouchEvent) {
+  const finalTouchTarget = document.elementFromPoint(
+    event.changedTouches[0].clientX,
+    event.changedTouches[0].clientY,
+  );
+
+  if (finalTouchTarget && currentTouchTarget.value !== finalTouchTarget) {
+    const dataInfo = finalTouchTarget.getAttribute("data-info");
+    if (dataInfo) {
+      handleDrop(dataInfo);
+    }
+  }
+}
 </script>
 
 <template>
-  <div class="bg-amber-100 p-4 mx-auto w-full">
+  <div class="p-4 mx-auto w-full">
     <div>
       <autocomplete
         v-model="searchQuery"
@@ -154,55 +187,51 @@ const handleDragStart = (info, date) => {
         @update:modelValue="handleModelUpdate"
       />
     </div>
-    <div class="text-red-900 bg-amber-400">{{ monthInView }}</div>
-    <div v-if="!bookingStore.selectedStationData">
-      Please select the station to view bookings
+    <div
+      v-if="!bookingStore.selectedStationData"
+      class="text-2xl justify-center text-center p-2 m-2 items-center border-b-2 border-b-gray-400"
+    >
+      Please enter the station to view bookings
     </div>
     <div
-      class="flex justify-end gap-1 m-2"
+      class="flex gap-1 mb-2 mt-4 justify-center items-center pb-2 border-b-2 border-b-gray-400"
       v-if="bookingStore.selectedStationData"
     >
+      <div class="mr-2 text-2xl">{{ monthInView }}</div>
       <ChevronDoubleLeftIcon
-        class="size-10 text-white cursor-pointer hover:bg-amber-400 bg-gray-500 p-1 rounded"
+        class="size-8 text-white cursor-pointer hover:bg-gray-700 bg-gray-500 p-1 rounded"
         @click="handlePreviousWeek"
       />
       <button
         @click="handleCurrentWeekSelection"
-        class="cursor-pointer hover:bg-amber-400 text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
+        class="cursor-pointer hover:bg-gray-700 text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
       >
         Today
       </button>
       <ChevronDoubleRightIcon
-        class="size-10 hover:bg-amber-400 cursor-pointer text-white bg-gray-500 rounded p-1"
+        class="size-8 hover:bg-gray-700 cursor-pointer text-white bg-gray-500 rounded p-1"
         @click="handleNextWeek"
       />
     </div>
 
-    <div
-      class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-2 mt-2"
-    >
-      <span
-        v-for="day in dates"
-        :key="day.dateFormatted"
-        class="border border-red-500"
-        :class="[
-          'p-2 rounded text-center',
-          day.date.isSame(dayjs(), 'day')
-            ? 'bg-red-500 text-white'
-            : 'bg-gray-100',
-        ]"
-        >{{ day.dayNameShort }} {{ day.dayNumber }}</span
-      >
-    </div>
-    <div class="grid grid-cols-7 gap-3">
+    <div class="p-1 grid gap-4 grid-cols-1 md:grid-cols-7 md:gap-3">
       <div
         v-for="date in dates"
         :key="date.dateFormatted"
-        class="border border-gray-500"
-        :class="['bg-green-400']"
+        class="border border-gray-400 min-h-[100px]"
         @dragover.prevent="handleDragOver"
-        @drop="handleDrop(date)"
+        @drop="handleDrop(date.date.toISOString())"
+        @touchend="handleTouchEnd($event)"
+        :data-info="date.date.toISOString()"
       >
+        <div
+          class="w-full flex justify-center p-1 border-b border-b-gray-400 bg-gray-100 font-bold touch-none"
+          :class="{
+            'text-red-500': date.date.isSame(dayjs(), 'day'),
+          }"
+        >
+          {{ date.dayNameShort }} {{ date.dayNumber }}
+        </div>
         <div :key="booking.id" v-for="booking in date.bookings">
           <router-link
             custom
@@ -210,24 +239,26 @@ const handleDragStart = (info, date) => {
               name: 'detail',
               params: {
                 bookingId: booking.id,
-                stationId: bookingStore.selectedStationData.id,
+                stationId: bookingStore.selectedStationData?.id,
               },
               query: {
-                stationName: bookingStore.selectedStationData.name,
+                stationName: bookingStore.selectedStationData?.name,
               },
             }"
             v-slot="{ navigate }"
           >
             <div
-              class="flex justify-between items-center border border-red-500 m-2 p-2 rounded cursor-pointer hover:bg-amber-400"
+              class="flex justify-between items-center m-2 p-2 rounded cursor-grab bg-amber-200 hover:bg-amber-400 border border-gray-500"
               @click="navigate"
               draggable="true"
-              @dragstart="handleDragStart(booking, date)"
+              @dragstart="handleDragStart(booking)"
+              @touchstart="handleTouchStart($event, booking)"
+              @touchmove="handleTouchMove"
             >
               <FlagIcon
                 class="size-4"
                 :class="[
-                  booking.isBookingStartDate
+                  booking?.isBookingStartDate
                     ? 'text-green-500'
                     : 'text-red-500',
                 ]"
