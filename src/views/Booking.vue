@@ -178,7 +178,7 @@ function handleTouchEnd(event: TouchEvent) {
 </script>
 
 <template>
-  <div class="p-4 mx-auto w-full">
+  <div class="p-4 mx-auto w-full select-none">
     <div>
       <autocomplete
         v-model="searchQuery"
@@ -194,27 +194,29 @@ function handleTouchEnd(event: TouchEvent) {
       Please enter the station to view bookings
     </div>
     <div
-      class="flex gap-1 mb-2 mt-4 justify-center items-center pb-2 border-b-2 border-b-gray-400"
+      class="flex gap-1 mt-4 justify-between border border-gray-400 rounded items-center bg-gray-300"
       v-if="bookingStore.selectedStationData"
     >
-      <div class="mr-2 text-2xl">{{ monthInView }}</div>
-      <ChevronDoubleLeftIcon
-        class="size-8 text-white cursor-pointer hover:bg-gray-700 bg-gray-500 p-1 rounded"
-        @click="handlePreviousWeek"
-      />
-      <button
-        @click="handleCurrentWeekSelection"
-        class="cursor-pointer hover:bg-gray-700 text-white bg-gray-500 rounded pt-1 pb-1 pr-2 pl-2"
-      >
-        Today
-      </button>
-      <ChevronDoubleRightIcon
-        class="size-8 hover:bg-gray-700 cursor-pointer text-white bg-gray-500 rounded p-1"
-        @click="handleNextWeek"
-      />
+      <div class="text-2xl p-2">{{ monthInView }}</div>
+      <div class="flex gap-1 p-2 md:gap-1">
+        <ChevronDoubleLeftIcon
+          class="size-9 text-white cursor-pointer hover:bg-gray-700 bg-gray-500 rounded px-1"
+          @click="handlePreviousWeek"
+        />
+        <button
+          @click="handleCurrentWeekSelection"
+          class="cursor-pointer hover:bg-gray-700 text-white bg-gray-500 rounded px-2"
+        >
+          Today
+        </button>
+        <ChevronDoubleRightIcon
+          class="size-9 hover:bg-gray-700 cursor-pointer text-white bg-gray-500 rounded px-1"
+          @click="handleNextWeek"
+        />
+      </div>
     </div>
 
-    <div class="p-1 grid gap-4 grid-cols-1 md:grid-cols-7 md:gap-3">
+    <div class="grid gap-4 grid-cols-1 md:grid-cols-7 md:gap-3 my-2">
       <div
         v-for="date in dates"
         :key="date.dateFormatted"
