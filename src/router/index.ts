@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 const Booking = () => import("../views/Booking.vue");
 const BookingDetail = () => import("../views/BookingDetail.vue");
 
-const routes = [
+export const routes = [
   {
     name: "booking",
     path: "/",
