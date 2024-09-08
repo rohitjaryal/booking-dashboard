@@ -10,21 +10,25 @@ const router = useRouter();
       <div class="relative flex h-16 items-center border-b border-gray-200">
         <div class="flex items-center">
           <div class="lg:ml-4 lg:block">
-            <div class="flex space-x-2">
-              <router-link
-                custom
-                :to="{
-                  name: 'booking',
-                }"
-                v-slot="{ navigate }"
-              >
-                <button
-                  class="px-4 py-2 rounded-md font-medium hover:bg-indigo-500 bg-gray-100"
-                  aria-current="page"
-                  @click="navigate"
+            <div class="flex space-x-4">
+              <div>
+                <router-link
+                  custom
+                  :to="{
+                    name: 'booking',
+                  }"
+                  v-slot="{ navigate }"
                 >
-                  Bookings
-                </button>
+                  <button
+                    class="px-4 py-2 rounded-md font-medium hover:bg-indigo-500 bg-gray-100"
+                    aria-current="page"
+                    @click="navigate"
+                  >
+                    Bookings
+                  </button>
+                </router-link>
+              </div>
+              <div>
                 <button
                   class="px-4 py-2 rounded-md font-medium hover:bg-indigo-500 bg-gray-100"
                   aria-current="page"
@@ -35,7 +39,7 @@ const router = useRouter();
                 >
                   Back
                 </button>
-              </router-link>
+              </div>
             </div>
           </div>
         </div>

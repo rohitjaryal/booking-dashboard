@@ -1,13 +1,8 @@
 import dayjs, { Dayjs } from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import duration from "dayjs/plugin/duration";
-
-dayjs.extend(relativeTime);
-dayjs.extend(duration);
 
 export default {
   getBeginningOfWeek(date: Dayjs): Dayjs {
-    return dayjs(date).startOf("week").add(1, "day");
+    return dayjs(date).startOf("week");
   },
   convertTimeStampToTimeAgo(time: string) {
     return time ? dayjs(dayjs(time)).fromNow() : "";

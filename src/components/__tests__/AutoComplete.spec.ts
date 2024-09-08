@@ -1,6 +1,5 @@
 import { flushPromises, mount, shallowMount } from "@vue/test-utils";
 import Autocomplete from "../../components/Autocomplete.vue";
-import { it } from "vitest";
 import { nextTick } from "vue";
 
 const TEST_DATA = {
@@ -50,7 +49,7 @@ describe("Tests for AutoComplete.vue", () => {
   });
 
   it("selects a suggestion and emits update:modelValue", async () => {
-    const wrapper = mount(Autocomplete, {
+    const wrapper: any = mount(Autocomplete, {
       props: TEST_DATA,
     });
 

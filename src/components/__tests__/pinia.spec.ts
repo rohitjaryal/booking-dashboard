@@ -14,7 +14,15 @@ describe("verify Pinia Booking Store", () => {
     bookingStore.selectedStationData = {
       id: "1",
       name: "test",
-      booking: [],
+      bookings: [
+        {
+          id: "1",
+          pickupReturnStationId: "1",
+          customerName: "Test booking",
+          startDate: "2021-03-13T22:04:19.032Z",
+          endDate: "2021-07-17T08:51:27.402Z",
+        },
+      ],
     };
     expect(bookingStore.selectedStationData.id).toStrictEqual("1");
   });

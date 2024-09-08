@@ -3,7 +3,7 @@ import {
   BookingDetailsWithExtraInfo,
 } from "../types/booking-details.types.ts";
 import { fetchRequest } from "../includes/axios.ts";
-import dateUtils from "../includes/date-utils.ts";
+import dateUtils from "../utils/date-utils.ts";
 import dayjs from "dayjs";
 
 interface BookingDetailsPayload {
