@@ -1,11 +1,5 @@
 # Booking Dashboard
 
-This project was bootstrapped with
-https://vitejs.dev/guide/
-```
-npm create vite@latest
-```
-
 ## Quick Start
 
 If you are using Linux and macOS it works out of the box following these steps:
@@ -66,7 +60,7 @@ src/
 More description about main components
 1. apis- All apis call will be kept here.
 2. components - This folder contains all the components that are being used on views with the intention of having a shared component library for easier extension and updates.
-2. includes- This folder contains the helper libraries.
+2. includes- This folder contains the helper/plugins libraries.
 3. router- All routing information goes here.
 4. stores - Stores related to different features are stored here.
 5. types- TS interfaces/type.
@@ -87,17 +81,28 @@ For styling, TailWindCSS is used along with Hero Icons.
 ## Things that can be improved
 1. Add more comprehensive unit tests to work with ViTest.
 2. Drag and drop in mobile devices can be improved.
+3. Adding generic shared components such as Button, Links will be helpful for unit tests and reuse.
+4. The beginning of week can be stored in local storage and retrieved in case user want to resume operation.
+5. Header navigation menus for mobile devices can be shown vertically.
+
+![Booking](screenshots/screen_booking.png?raw=true "Booking")
+![Booking details](screenshots/screen_booking_detail.png?raw=true "Booking details")
+![Booking details](screenshots/screen_booking_detail_mobile.png?raw=true "Booking details Mobile view")
 
 # Vue 3 + TypeScript + Vite
 
+This project was bootstrapped with
+https://vitejs.dev/guide/
+```
+npm create vite@latest
+```
 This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
 ## Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
-![Booking](screenshots/screen_booking.png?raw=true "Booking")
-![Booking details](screenshots/screen_booking_detail.png?raw=true "Booking details")
+
 
          
 

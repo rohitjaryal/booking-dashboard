@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
+import { computed } from "vue";
 
 const router = useRouter();
+
+const isHomePage = computed(() => {
+  return router?.currentRoute?.value?.path === "/";
+});
 </script>
 
 <template>
@@ -29,16 +34,24 @@ const router = useRouter();
                 </router-link>
               </div>
               <div>
-                <button
-                  class="px-4 py-2 rounded-md font-medium hover:bg-indigo-500 bg-gray-100"
-                  aria-current="page"
-                  @click.prevent="router.back()"
-                  :class="{
-                    hidden: router.currentRoute.value.path === '/',
+                <router-link
+                  custom
+                  :to="{
+                    name: 'booking',
                   }"
+                  v-slot="{ navigate }"
                 >
-                  Back
-                </button>
+                  <button
+                    class="px-4 py-2 rounded-md font-medium hover:bg-indigo-500 bg-gray-100"
+                    aria-current="page"
+                    @click="navigate"
+                    :class="{
+                      hidden: isHomePage,
+                    }"
+                  >
+                    Back
+                  </button>
+                </router-link>
               </div>
             </div>
           </div>
