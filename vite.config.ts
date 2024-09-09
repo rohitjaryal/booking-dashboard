@@ -7,5 +7,6 @@ export default defineConfig({
   test: {
     globals: true,
   },
+  base: "https://rohitjaryal.github.io/booking-dashboard/",
   plugins: [vue()],
 });
